@@ -319,6 +319,11 @@ Bun.serve({
     }
     const res = url.pathname.match(/^\/api\/resume\/([0-9a-zA-Z-]+)$/);
     if (res && req.method === "POST") return json(resume(res[1]));
+    if (url.pathname === "/api/close" && req.method === "POST") {
+      // The page cannot close its own window, so the window manager does it.
+      Bun.spawn(["bash", "-c", `hyprctl clients -j | jq -r '.[] | select(.class | startswith("chrome-claude-history.localhost")) | .address' | while read -r a; do hyprctl dispatch "hl.dsp.window.close({ window = \\"address:$a\\" })"; done`], { stdio: ["ignore", "ignore", "ignore"] });
+      return json({ ok: true });
+    }
     return new Response("not found", { status: 404 });
   },
 });

@@ -13,144 +13,148 @@
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg: #f6f5f2; --panel: #fff; --raised: #f0eeea; --border: #dedbd4;
+      --bg: #f6f5f2; --panel: #fff; --raised: #eceae5; --border: #dedbd4;
       --text: #22242a; --dim: #6c7180; --mark: rgba(217, 119, 87, .32); --user: #e9eef8;
       color-scheme: light;
     }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-  body { background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+  body { background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
   button, input, select { font: inherit; color: inherit; }
   mark { background: var(--mark); color: inherit; border-radius: 2px; }
   mark.cur { outline: 2px solid var(--accent); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  header { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  #q { flex: 1 1 220px; min-width: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 15px; outline: none; }
-  #q:focus { border-color: var(--accent); }
-  .chips { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  .chips button { background: var(--panel); border: 0; padding: 7px 11px; cursor: pointer; color: var(--dim); }
-  .chips button + button { border-left: 1px solid var(--border); }
-  .chips button.on { background: var(--raised); color: var(--text); }
-  input[type=date], select { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; }
-  #grpSel { display: none; max-width: 240px; }
-  #count { color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  #q { width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--border); padding: 11px 14px; font-size: 16px; outline: none; }
+  #q::-webkit-search-cancel-button { display: none; }
 
+  /* Badges: small pills for folders and dates, in rows and as filters. */
+  .b { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11px; line-height: 16px; white-space: nowrap; border: 1px solid transparent; flex: none; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+  .b.folder { background: hsl(var(--h) 50% 50% / .16); color: hsl(var(--h) 55% 62%); }
+  .b.date { border-color: var(--border); color: var(--dim); font-variant-numeric: tabular-nums; }
+  button.b, .row .b.folder { cursor: pointer; }
+  button.b { opacity: .6; }
+  button.b:hover { opacity: .85; }
+  button.b.on { opacity: 1; border-color: currentColor; }
+  button.b.src { background: transparent; color: var(--dim); border-color: var(--border); }
+  button.b.src.on { color: var(--accent); border-color: var(--accent); }
+
+  #filters { display: flex; gap: 5px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--border); overflow: hidden; }
+  #filters .sep { width: 1px; height: 14px; background: var(--border); flex: none; }
+  #fbadges { display: flex; gap: 5px; overflow: hidden; flex: 1; }
+  #grpSel { background: transparent; border: 0; color: var(--dim); font-size: 11px; width: 58px; cursor: pointer; outline: none; }
   #progress { height: 2px; background: var(--accent); width: 0; transition: width .3s; }
-  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 230px minmax(320px, 440px) 1fr; }
-  main > * { min-height: 0; overflow-y: auto; }
-  #folders { border-right: 1px solid var(--border); padding: 6px; }
-  .folder { display: flex; gap: 8px; padding: 5px 8px; border-radius: 6px; cursor: pointer; color: var(--dim); }
-  .folder:hover { background: var(--panel); }
-  .folder.on { background: var(--raised); color: var(--text); }
-  .folder span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
-  .folder span:last-child { font-variant-numeric: tabular-nums; font-size: 12px; }
 
-  #list { border-right: 1px solid var(--border); }
-  .day { position: sticky; top: 0; background: var(--bg); color: var(--dim); font-size: 12px; padding: 6px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .04em; z-index: 1; }
-  .row { padding: 9px 12px; border-bottom: 1px solid var(--border); cursor: pointer; border-left: 3px solid transparent; }
+  main { flex: 1; min-height: 0; display: flex; }
+  #list { flex: 1; overflow-y: auto; }
+  .row { padding: 5px 10px 5px 9px; cursor: pointer; border-left: 3px solid transparent; }
   .row:hover { background: var(--panel); }
   .row.sel { background: var(--raised); border-left-color: var(--accent); }
-  .row .t { font-weight: 600; display: flex; gap: 8px; }
-  .row .t span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row .hits { color: var(--accent); font-weight: 500; font-size: 12px; }
-  .row .s { color: var(--dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0; overflow-wrap: anywhere; }
-  .row .m { color: var(--dim); font-size: 12px; display: flex; gap: 6px; white-space: nowrap; }
-  .row .m .f { overflow: hidden; text-overflow: ellipsis; color: var(--text); opacity: .75; }
-  .row .m .r { margin-left: auto; }
-  .empty { color: var(--dim); padding: 40px 16px; text-align: center; }
+  .row .t { display: flex; gap: 6px; align-items: center; }
+  .row .t > span:first-child { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .hits { color: var(--accent); font-size: 11px; }
+  .row .s { color: var(--dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { color: var(--dim); padding: 30px 12px; text-align: center; }
 
-  #view { display: flex; flex-direction: column; overflow: hidden; }
-  #vhead { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  #vhead .info { flex: 1 1 260px; min-width: 0; }
-  #vhead h1 { font-size: 16px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #vhead .sub { color: var(--dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+  #view { flex: 1; display: none; flex-direction: column; min-width: 0; }
+  body.open #view { display: flex; }
+  body.open #list, body.open #filters { display: none; }
+  #vhead { padding: 6px 10px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; align-items: center; }
+  #vhead .info { flex: 1; min-width: 0; }
+  #vhead h1 { font-size: 13.5px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #vhead .sub { color: var(--dim); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 3px 9px; cursor: pointer; white-space: nowrap; }
   .btn:hover { background: var(--raised); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  #back { display: none; }
-  #nav { display: none; align-items: center; gap: 4px; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
-  #nav .btn { padding: 4px 9px; }
-  #vbody { flex: 1; overflow-y: auto; padding: 16px; }
-  .msg { max-width: 860px; margin: 0 auto 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .msg.u { background: var(--user); border-radius: 10px; padding: 10px 14px; margin-top: 22px; }
-  .msg.u .when { display: block; color: var(--dim); font-size: 11px; margin-bottom: 2px; }
-  .msg.n { color: var(--dim); border: 1px dashed var(--border); border-radius: 10px; padding: 8px 14px; font-size: 13px; max-height: 120px; overflow: auto; }
-  .msg.t { color: var(--dim); font: 12px/1.4 var(--mono); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #nav { display: none; align-items: center; gap: 4px; color: var(--dim); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #nav .btn { padding: 1px 7px; }
+  #vbody { flex: 1; overflow-y: auto; padding: 10px 12px; outline: none; }
+  .msg { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.u { background: var(--user); border-radius: 8px; padding: 6px 10px; margin-top: 14px; }
+  .msg.u:first-child { margin-top: 0; }
+  .msg.u .when { float: right; color: var(--dim); font-size: 10.5px; margin-left: 8px; }
+  .msg.n { color: var(--dim); border: 1px dashed var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; max-height: 90px; overflow: auto; }
+  .msg.t { color: var(--dim); font: 11px/1.35 var(--mono); margin-bottom: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .msg.t + .msg.a { margin-top: 6px; }
   .msg.t b { color: var(--text); opacity: .7; font-weight: 600; }
-  .msg pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.45 var(--mono); margin: 6px 0; white-space: pre; }
-  .msg code { font: 12.5px var(--mono); background: var(--panel); border-radius: 4px; padding: 1px 4px; }
-  .msg b.h { font-size: 15px; }
-  .msg table { border-collapse: collapse; white-space: normal; margin: 4px 0; }
-  .msg th, .msg td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; vertical-align: top; }
+  .msg pre { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; overflow-x: auto; font: 11.5px/1.4 var(--mono); margin: 4px 0; white-space: pre; }
+  .msg code { font: 11.5px var(--mono); background: var(--panel); border-radius: 3px; padding: 1px 3px; }
+  .msg b.h { font-size: 13.5px; }
+  .msg table { border-collapse: collapse; white-space: normal; margin: 3px 0; }
+  .msg th, .msg td { border: 1px solid var(--border); padding: 2px 8px; text-align: left; vertical-align: top; }
   .msg th { background: var(--panel); }
   .msg a { color: var(--accent); }
-  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--raised); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
-  #toast.on { opacity: 1; }
 
-  @media (max-width: 1250px) {
-    main { grid-template-columns: minmax(280px, 380px) 1fr; }
-    #folders { display: none; }
-    #grpSel { display: block; }
-  }
-  @media (max-width: 760px) {
-    main { grid-template-columns: 1fr; }
-    #view { display: none; }
-    body.open #view { display: flex; }
-    body.open #list { display: none; }
-    body.open #back { display: block; }
-  }
+  footer { display: flex; gap: 12px; padding: 4px 10px; border-top: 1px solid var(--border); color: var(--dim); font-size: 11px; white-space: nowrap; }
+  footer kbd { font: inherit; color: var(--text); opacity: .8; }
+  footer #count { margin-left: auto; font-variant-numeric: tabular-nums; }
+  #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--raised); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.on { opacity: 1; }
 </style>
 </head>
 <body>
-<header>
-  <input id="q" type="search" placeholder="Search every Claude session…" autofocus autocomplete="off" spellcheck="false">
-  <select id="grpSel" title="Folder"></select>
-  <div class="chips" id="src" title="Mine: typed in a terminal. Agents: started by Iris, Otto and other automation.">
-    <button data-s="mine" class="on">Mine</button><button data-s="agents">Agents</button><button data-s="all">All</button>
-  </div>
-  <div class="chips" id="range">
-    <button data-d="" class="on">All</button><button data-d="0">Today</button><button data-d="7">7 days</button><button data-d="30">30 days</button>
-  </div>
-  <input type="date" id="from" title="From"><input type="date" id="to" title="To">
-  <span id="count"></span>
-</header>
+<input id="q" type="search" placeholder="Search Claude sessions…" autofocus autocomplete="off" spellcheck="false">
+<div id="filters">
+  <button class="b src on" data-s="mine" title="Sessions you typed in a terminal">Mine</button>
+  <button class="b src" data-s="agents" title="Sessions started by Iris, Otto and other automation">Agents</button>
+  <span class="sep"></span>
+  <button class="b date" data-d="0">Today</button><button class="b date" data-d="7">7 days</button><button class="b date" data-d="30">30 days</button>
+  <span class="sep"></span>
+  <div id="fbadges"></div>
+  <select id="grpSel" title="All folders"></select>
+</div>
 <div id="progress"></div>
 <main>
-  <aside id="folders"></aside>
   <section id="list"></section>
   <section id="view">
-    <div id="vhead" hidden>
-      <button class="btn" id="back">← Back</button>
+    <div id="vhead">
+      <button class="btn" id="back" title="Back (Esc)">←</button>
       <div class="info"><h1 id="vtitle"></h1><div class="sub" id="vsub"></div></div>
       <div id="nav"><button class="btn" id="prev" title="Previous match (p)">↑</button><span id="navn"></span><button class="btn" id="next" title="Next match (n)">↓</button></div>
-      <button class="btn" id="copy" title="Copy the resume command">Copy command</button>
-      <button class="btn primary" id="resume" title="Open in a terminal (Ctrl+Enter)">Resume</button>
+      <button class="btn" id="copy" title="Copy the resume command">Copy</button>
+      <button class="btn primary" id="resume" title="Resume in a terminal (Enter)">Resume</button>
     </div>
-    <div id="vbody"><div class="empty">Pick a session on the left.</div></div>
+    <div id="vbody" tabindex="-1"></div>
   </section>
 </main>
+<footer><span><kbd>↵</kbd> resume</span><span><kbd>Tab</kbd> read</span><span><kbd>Esc</kbd> <span id="escHint">close</span></span><span id="count"></span></footer>
 <div id="toast"></div>
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const PAGE = 100;
-const state = { q: '', src: 'mine', grp: '', days: '', from: '', to: '', rows: [], total: 0, sel: -1, open: null, session: null, marks: [], cur: -1 };
+const state = { q: '', src: 'mine', grp: '', days: '', rows: [], total: 0, sel: -1, selId: null, session: null, marks: [], cur: -1 };
 let HOME = '', listReq = null, viewReq = null, loading = false;
 
 const short = (p) => (p && HOME && p.startsWith(HOME) ? '~' + p.slice(HOME.length) : p);
-const wide = () => matchMedia('(min-width: 761px)').matches;
 const tokens = () => state.q.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 const dayStart = (ms) => new Date(ms).setHours(0, 0, 0, 0);
 const time = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const isOpen = () => document.body.classList.contains('open');
 
 function dayLabel(ms) {
   const diff = Math.round((dayStart(Date.now()) - dayStart(ms)) / 864e5);
   if (diff === 0) return 'Today';
   if (diff === 1) return 'Yesterday';
   const d = new Date(ms);
-  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', ...(d.getFullYear() !== new Date().getFullYear() && { year: 'numeric' }) });
+  if (diff < 7) return d.toLocaleDateString([], { weekday: 'long' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric', ...(d.getFullYear() !== new Date().getFullYear() && { year: 'numeric' }) });
 }
+
+// Folder badge: the last part of the path, in a colour that stays the same for that folder.
+function folderName(grp) {
+  const parts = short(grp).split('/').filter(Boolean);
+  return parts.slice(parts.at(-1) === 'worktrees' ? -2 : -1).join('/') || '/';
+}
+function hue(grp) {
+  let h = 0;
+  for (const c of grp) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % 360;
+}
+const folderBadge = (grp, tag = 'span', extra = '') =>
+  `<${tag} class="b folder${extra}" style="--h:${hue(grp)}" data-g="${esc(grp)}" title="${esc(short(grp))}">${esc(folderName(grp))}</${tag}>`;
 
 function toast(text) {
   $('#toast').textContent = text;
@@ -166,10 +170,6 @@ function params(offset) {
   if (state.q) p.set('q', state.q);
   if (state.grp) p.set('grp', state.grp);
   if (state.days !== '') p.set('from', dayStart(Date.now()) - state.days * 864e5);
-  else {
-    if (state.from) p.set('from', new Date(state.from + 'T00:00').getTime());
-    if (state.to) p.set('to', new Date(state.to + 'T23:59:59').getTime());
-  }
   return p;
 }
 
@@ -182,11 +182,11 @@ async function load(more = false) {
     const r = await (await fetch('/api/sessions?' + params(more ? state.rows.length : 0), { signal: listReq.signal })).json();
     state.total = r.total;
     state.rows = more ? state.rows.concat(r.rows) : r.rows;
-    renderList(more);
+    renderList();
     if (!more) {
-      $('#list').scrollTop = 0;
-      const keep = state.rows.findIndex((x) => x.id === state.open);
-      select(keep >= 0 ? keep : 0, wide(), keep >= 0 && !state.q);
+      const keep = state.rows.findIndex((x) => x.id === state.selId);
+      if (keep < 0) $('#list').scrollTop = 0;
+      select(Math.max(keep, 0));
     }
   } catch (e) {
     if (e.name !== 'AbortError') throw e;
@@ -199,22 +199,15 @@ function rowHtml(r, i) {
   const body = r.snippet
     ? (r.hitRole === 'u' ? 'You: ' : r.hitRole === 'a' ? 'Claude: ' : '') + esc(r.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>')
     : esc(r.first_prompt);
+  const today = dayStart(r.ended) === dayStart(Date.now());
   return `<div class="row" data-i="${i}">
-    <div class="t"><span>${esc(r.title || 'Untitled')}</span>${r.hits ? `<span class="hits">${r.hits}</span>` : ''}</div>
+    <div class="t"><span>${esc(r.title || 'Untitled')}</span>${r.hits ? `<span class="hits">${r.hits}</span>` : ''}${folderBadge(r.grp)}<span class="b date" title="${dayLabel(r.ended)} ${time(r.ended)} · ${r.users} prompt${r.users === 1 ? '' : 's'}${r.branch ? ' · ' + esc(r.branch) : ''}">${today ? time(r.ended) : dayLabel(r.ended)}</span></div>
     <div class="s">${body}</div>
-    <div class="m"><span class="f">${esc(short(r.cwd))}</span>${r.branch ? `<span>· ${esc(r.branch)}</span>` : ''}<span class="r">${r.users} prompt${r.users === 1 ? '' : 's'} · ${time(r.ended)}</span></div>
   </div>`;
 }
 
 function renderList() {
-  let html = '', day = null;
-  state.rows.forEach((r, i) => {
-    const d = dayStart(r.ended);
-    if (d !== day) html += `<div class="day">${dayLabel(r.ended)}</div>`;
-    day = d;
-    html += rowHtml(r, i);
-  });
-  $('#list').innerHTML = html || '<div class="empty">No sessions match.</div>';
+  $('#list').innerHTML = state.rows.map(rowHtml).join('') || '<div class="empty">No sessions match.</div>';
   if (state.rows.length < state.total) {
     const s = document.createElement('div');
     s.className = 'empty';
@@ -225,19 +218,16 @@ function renderList() {
   $('#count').textContent = `${state.total.toLocaleString()} session${state.total === 1 ? '' : 's'}`;
   $('#list').querySelector(`.row[data-i="${state.sel}"]`)?.classList.add('sel');
 }
-const more = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && load(true), { root: $('#list'), rootMargin: '400px' });
+const more = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && load(true), { root: $('#list'), rootMargin: '300px' });
 
-function select(i, open, quiet) {
-  if (!state.rows.length) return (state.sel = -1);
+function select(i) {
+  if (!state.rows.length) return void (state.sel = -1);
   state.sel = Math.max(0, Math.min(i, state.rows.length - 1));
+  state.selId = state.rows[state.sel].id;
   $('#list').querySelector('.row.sel')?.classList.remove('sel');
   const el = $('#list').querySelector(`.row[data-i="${state.sel}"]`);
   el?.classList.add('sel');
   el?.scrollIntoView({ block: 'nearest' });
-  if (open && !quiet) {
-    clearTimeout(select.t);
-    select.t = setTimeout(() => openSession(state.rows[state.sel]), 90);
-  }
 }
 
 // ---------------------------------------------------------------- transcript
@@ -297,8 +287,6 @@ function markAll(root, toks) {
 
 async function openSession(row) {
   if (!row) return;
-  state.open = row.id;
-  document.body.classList.add('open');
   viewReq?.abort();
   viewReq = new AbortController();
   let r;
@@ -308,9 +296,10 @@ async function openSession(row) {
     if (e.name === 'AbortError') return;
     throw e;
   }
-  if (r.error) return void ($('#vbody').innerHTML = `<div class="empty">${esc(r.error)}</div>`);
+  if (r.error) return toast(r.error);
   const s = (state.session = r.session);
-  $('#vhead').hidden = false;
+  document.body.classList.add('open');
+  $('#escHint').textContent = 'back';
   $('#vtitle').textContent = s.title || 'Untitled';
   $('#vsub').textContent = [short(s.cwd), s.branch, `${dayLabel(s.started)} ${time(s.started)} → ${dayStart(s.started) === dayStart(s.ended) ? '' : dayLabel(s.ended) + ' '}${time(s.ended)}`, `${s.users} prompt${s.users === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
   $('#vbody').innerHTML = r.items.map((it) => {
@@ -321,10 +310,18 @@ async function openSession(row) {
   }).join('');
   markAll($('#vbody'), tokens());
   state.marks = [...$('#vbody').querySelectorAll('mark')];
+  state.cur = -1;
   $('#nav').style.display = state.marks.length ? 'flex' : 'none';
+  $('#vbody').focus();
   const hit = row.hit && $('#vbody').querySelector(`[data-u="${row.hit}"] mark`);
   if (state.marks.length) jump(Math.max(0, state.marks.indexOf(hit)));
   else $('#vbody').scrollTop = 0;
+}
+
+function closeView() {
+  document.body.classList.remove('open');
+  $('#escHint').textContent = 'close';
+  $('#q').focus();
 }
 
 function jump(i) {
@@ -337,67 +334,67 @@ function jump(i) {
   $('#navn').textContent = `${state.cur + 1} / ${n}`;
 }
 
-async function resume() {
-  if (!state.session) return;
-  const r = await (await fetch('/api/resume/' + state.session.id, { method: 'POST' })).json();
-  toast(r.error || 'Opening in a terminal…');
+const closeWidget = () => fetch('/api/close', { method: 'POST' });
+
+// Launcher behaviour: resuming a session opens its terminal and gets the widget out of the way.
+async function resume(id) {
+  if (!id) return;
+  const r = await (await fetch('/api/resume/' + id, { method: 'POST' })).json();
+  if (r.error) toast(r.error);
+  else closeWidget();
 }
 
 // ---------------------------------------------------------------- filters
 
 async function loadFolders() {
   const folders = await (await fetch('/api/folders?src=' + state.src)).json();
-  const all = folders.reduce((a, f) => a + f.n, 0);
-  $('#folders').innerHTML = `<div class="folder" data-g=""><span>All folders</span><span>${all}</span></div>` +
-    folders.map((f) => `<div class="folder" data-g="${esc(f.grp)}" title="${esc(short(f.grp))}"><span>&lrm;${esc(short(f.grp))}</span><span>${f.n}</span></div>`).join('');
-  $('#grpSel').innerHTML = `<option value="">All folders (${all})</option>` + folders.map((f) => `<option value="${esc(f.grp)}">${esc(short(f.grp))} (${f.n})</option>`).join('');
-  showGrp();
+  $('#fbadges').innerHTML = folders.slice(0, 8).map((f) => folderBadge(f.grp, 'button')).join('');
+  $('#grpSel').innerHTML = `<option value="">More…</option>` + folders.map((f) => `<option value="${esc(f.grp)}">${esc(short(f.grp))} (${f.n})</option>`).join('');
+  showFilters();
 }
-function showGrp() {
-  for (const el of $('#folders').children) el.classList.toggle('on', el.dataset.g === state.grp);
-  $('#grpSel').value = state.grp;
+function showFilters() {
+  for (const b of document.querySelectorAll('#filters button')) {
+    b.classList.toggle('on', b.dataset.s ? b.dataset.s === state.src || state.src === 'all' : b.dataset.d !== undefined ? b.dataset.d === state.days : b.dataset.g === state.grp);
+  }
+  // A folder picked from "More…" or from a row has no badge in the bar yet: show it first.
+  if (state.grp && !$('#fbadges').querySelector('.on')) $('#fbadges').insertAdjacentHTML('afterbegin', folderBadge(state.grp, 'button', ' on'));
+  $('#grpSel').value = '';
 }
 function setGrp(g) {
-  state.grp = g;
-  showGrp();
+  state.grp = state.grp === g ? '' : g;
+  showFilters();
   load();
 }
 
-$('#folders').onclick = (e) => { const f = e.target.closest('.folder'); if (f) setGrp(f.dataset.g); };
-$('#grpSel').onchange = (e) => setGrp(e.target.value);
-$('#src').onclick = (e) => {
-  if (!e.target.dataset.s) return;
-  state.src = e.target.dataset.s;
-  state.grp = '';
-  for (const b of $('#src').children) b.classList.toggle('on', b === e.target);
-  loadFolders();
+$('#filters').onclick = (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.g) return setGrp(b.dataset.g);
+  if (b.dataset.d !== undefined) state.days = state.days === b.dataset.d ? '' : b.dataset.d;
+  else {
+    // Mine and Agents each toggle; both on means everything, and one always stays on.
+    const other = b.dataset.s === 'mine' ? 'agents' : 'mine';
+    state.src = state.src === 'all' ? other : state.src === b.dataset.s ? b.dataset.s : 'all';
+    state.grp = '';
+    loadFolders();
+  }
+  showFilters();
   load();
+  $('#q').focus();
 };
-$('#range').onclick = (e) => {
-  if (e.target.dataset.d === undefined) return;
-  state.days = e.target.dataset.d;
-  state.from = state.to = $('#from').value = $('#to').value = '';
-  for (const b of $('#range').children) b.classList.toggle('on', b === e.target);
-  load();
-};
-for (const id of ['from', 'to']) {
-  $('#' + id).onchange = (e) => {
-    state[id] = e.target.value;
-    state.days = '';
-    for (const b of $('#range').children) b.classList.toggle('on', !state.from && !state.to && b.dataset.d === '');
-    load();
-  };
-}
+$('#grpSel').onchange = (e) => { if (e.target.value) setGrp(e.target.value); $('#q').focus(); };
 $('#q').oninput = (e) => {
   clearTimeout(load.t);
-  load.t = setTimeout(() => { state.q = e.target.value.trim(); load(); }, 130);
+  load.t = setTimeout(() => { state.q = e.target.value.trim(); state.selId = null; load(); }, 130);
 };
 $('#list').onclick = (e) => {
+  const badge = e.target.closest('.b.folder');
+  if (badge) return setGrp(badge.dataset.g);
   const row = e.target.closest('.row');
   if (row) { select(+row.dataset.i); openSession(state.rows[state.sel]); }
 };
-$('#back').onclick = () => document.body.classList.remove('open');
-$('#resume').onclick = resume;
+$('#back').onclick = closeView;
+$('#resume').onclick = () => resume(state.session?.id);
 $('#prev').onclick = () => jump(state.cur - 1);
 $('#next').onclick = () => jump(state.cur + 1);
 $('#copy').onclick = async () => {
@@ -407,21 +404,27 @@ $('#copy').onclick = async () => {
 };
 
 addEventListener('keydown', (e) => {
-  const typing = document.activeElement === $('#q');
-  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-    e.preventDefault();
-    select(state.sel + (e.key === 'ArrowDown' ? 1 : -1), wide());
-  } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) resume();
-  else if (e.key === 'Enter') openSession(state.rows[state.sel]);
-  else if (e.key === 'Escape') {
-    if (document.body.classList.contains('open') && !wide()) document.body.classList.remove('open');
+  const open = isOpen();
+  if (e.key === 'Escape') {
+    if (open) closeView();
     else if ($('#q').value) { $('#q').value = state.q = ''; load(); }
-    $('#q').focus();
-  } else if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    else closeWidget();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    resume(open ? state.session?.id : state.rows[state.sel]?.id);
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    open ? closeView() : openSession(state.rows[state.sel]);
+  } else if (open) {
     if (e.key === 'n') jump(state.cur + 1);
     else if (e.key === 'p') jump(state.cur - 1);
-    else if (e.key === '/' || e.key.length === 1) $('#q').focus();
-  }
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    select(state.sel + (e.key === 'ArrowDown' ? 1 : -1));
+  } else if (e.key === 'PageDown' || e.key === 'PageUp') {
+    e.preventDefault();
+    select(state.sel + (e.key === 'PageDown' ? 8 : -8));
+  } else if (document.activeElement !== $('#q') && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) $('#q').focus();
 });
 
 // ---------------------------------------------------------------- boot
@@ -431,17 +434,16 @@ async function poll() {
   HOME = s.home;
   if (s.indexing) {
     $('#progress').style.width = `${(100 * s.done) / s.total}%`;
-    $('#count').textContent = `Indexing ${s.done} / ${s.total}…`;
-    setTimeout(async () => { await poll(); }, 1000);
+    setTimeout(poll, 1000);
     if (s.done % 5 === 0) loadFolders(), load();
-  } else if ($('#progress').style.width && $('#progress').style.width !== '0px') {
+  } else if (parseFloat($('#progress').style.width)) {
     $('#progress').style.width = '0';
     loadFolders();
     load();
   }
 }
-// Sessions keep changing while the window sits open; refresh when it gets focus again.
-addEventListener('focus', () => { loadFolders(); if (!state.q) load(); });
+// Sessions keep changing while the widget sits open; refresh when it gets focus again.
+addEventListener('focus', () => { if (!isOpen()) { loadFolders(); load(); } });
 poll().then(() => { loadFolders(); load(); });
 </script>
 </body>
