@@ -1,0 +1,11 @@
+[Unit]
+Description=Claude History: searchable index of every Claude Code session
+
+[Service]
+WorkingDirectory=%h/Work/claude-history
+Environment=PATH=%h/.local/share/mise/installs/claude/latest:%h/.local/bin:/usr/share/omarchy/bin:/usr/local/bin:/usr/bin
+ExecStart=%h/.local/bin/bun %h/Work/claude-history/server.ts
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

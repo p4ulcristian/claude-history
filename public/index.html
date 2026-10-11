@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude History</title>
+<style>
+  :root {
+    --bg: #111318; --panel: #171a21; --raised: #1e222b; --border: #272b35;
+    --text: #d9dce3; --dim: #8a91a0; --accent: #d97757; --mark: rgba(217, 119, 87, .38);
+    --user: #20283a; --mono: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f5f2; --panel: #fff; --raised: #f0eeea; --border: #dedbd4;
+      --text: #22242a; --dim: #6c7180; --mark: rgba(217, 119, 87, .32); --user: #e9eef8;
+      color-scheme: light;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+  button, input, select { font: inherit; color: inherit; }
+  mark { background: var(--mark); color: inherit; border-radius: 2px; }
+  mark.cur { outline: 2px solid var(--accent); }
+
+  header { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  #q { flex: 1 1 220px; min-width: 0; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 15px; outline: none; }
+  #q:focus { border-color: var(--accent); }
+  .chips { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .chips button { background: var(--panel); border: 0; padding: 7px 11px; cursor: pointer; color: var(--dim); }
+  .chips button + button { border-left: 1px solid var(--border); }
+  .chips button.on { background: var(--raised); color: var(--text); }
+  input[type=date], select { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; }
+  #grpSel { display: none; max-width: 240px; }
+  #count { color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  #progress { height: 2px; background: var(--accent); width: 0; transition: width .3s; }
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: 230px minmax(320px, 440px) 1fr; }
+  main > * { min-height: 0; overflow-y: auto; }
+  #folders { border-right: 1px solid var(--border); padding: 6px; }
+  .folder { display: flex; gap: 8px; padding: 5px 8px; border-radius: 6px; cursor: pointer; color: var(--dim); }
+  .folder:hover { background: var(--panel); }
+  .folder.on { background: var(--raised); color: var(--text); }
+  .folder span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+  .folder span:last-child { font-variant-numeric: tabular-nums; font-size: 12px; }
+
+  #list { border-right: 1px solid var(--border); }
+  .day { position: sticky; top: 0; background: var(--bg); color: var(--dim); font-size: 12px; padding: 6px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .04em; z-index: 1; }
+  .row { padding: 9px 12px; border-bottom: 1px solid var(--border); cursor: pointer; border-left: 3px solid transparent; }
+  .row:hover { background: var(--panel); }
+  .row.sel { background: var(--raised); border-left-color: var(--accent); }
+  .row .t { font-weight: 600; display: flex; gap: 8px; }
+  .row .t span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .hits { color: var(--accent); font-weight: 500; font-size: 12px; }
+  .row .s { color: var(--dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 2px 0; overflow-wrap: anywhere; }
+  .row .m { color: var(--dim); font-size: 12px; display: flex; gap: 6px; white-space: nowrap; }
+  .row .m .f { overflow: hidden; text-overflow: ellipsis; color: var(--text); opacity: .75; }
+  .row .m .r { margin-left: auto; }
+  .empty { color: var(--dim); padding: 40px 16px; text-align: center; }
+
+  #view { display: flex; flex-direction: column; overflow: hidden; }
+  #vhead { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #vhead .info { flex: 1 1 260px; min-width: 0; }
+  #vhead h1 { font-size: 16px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #vhead .sub { color: var(--dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--raised); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #back { display: none; }
+  #nav { display: none; align-items: center; gap: 4px; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+  #nav .btn { padding: 4px 9px; }
+  #vbody { flex: 1; overflow-y: auto; padding: 16px; }
+  .msg { max-width: 860px; margin: 0 auto 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.u { background: var(--user); border-radius: 10px; padding: 10px 14px; margin-top: 22px; }
+  .msg.u .when { display: block; color: var(--dim); font-size: 11px; margin-bottom: 2px; }
+  .msg.n { color: var(--dim); border: 1px dashed var(--border); border-radius: 10px; padding: 8px 14px; font-size: 13px; max-height: 120px; overflow: auto; }
+  .msg.t { color: var(--dim); font: 12px/1.4 var(--mono); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .msg.t b { color: var(--text); opacity: .7; font-weight: 600; }
+  .msg pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.45 var(--mono); margin: 6px 0; white-space: pre; }
+  .msg code { font: 12.5px var(--mono); background: var(--panel); border-radius: 4px; padding: 1px 4px; }
+  .msg b.h { font-size: 15px; }
+  .msg table { border-collapse: collapse; white-space: normal; margin: 4px 0; }
+  .msg th, .msg td { border: 1px solid var(--border); padding: 4px 10px; text-align: left; vertical-align: top; }
+  .msg th { background: var(--panel); }
+  .msg a { color: var(--accent); }
+  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--raised); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.on { opacity: 1; }
+
+  @media (max-width: 1250px) {
+    main { grid-template-columns: minmax(280px, 380px) 1fr; }
+    #folders { display: none; }
+    #grpSel { display: block; }
+  }
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; }
+    #view { display: none; }
+    body.open #view { display: flex; }
+    body.open #list { display: none; }
+    body.open #back { display: block; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <input id="q" type="search" placeholder="Search every Claude session…" autofocus autocomplete="off" spellcheck="false">
+  <select id="grpSel" title="Folder"></select>
+  <div class="chips" id="src" title="Mine: typed in a terminal. Agents: started by Iris, Otto and other automation.">
+    <button data-s="mine" class="on">Mine</button><button data-s="agents">Agents</button><button data-s="all">All</button>
+  </div>
+  <div class="chips" id="range">
+    <button data-d="" class="on">All</button><button data-d="0">Today</button><button data-d="7">7 days</button><button data-d="30">30 days</button>
+  </div>
+  <input type="date" id="from" title="From"><input type="date" id="to" title="To">
+  <span id="count"></span>
+</header>
+<div id="progress"></div>
+<main>
+  <aside id="folders"></aside>
+  <section id="list"></section>
+  <section id="view">
+    <div id="vhead" hidden>
+      <button class="btn" id="back">← Back</button>
+      <div class="info"><h1 id="vtitle"></h1><div class="sub" id="vsub"></div></div>
+      <div id="nav"><button class="btn" id="prev" title="Previous match (p)">↑</button><span id="navn"></span><button class="btn" id="next" title="Next match (n)">↓</button></div>
+      <button class="btn" id="copy" title="Copy the resume command">Copy command</button>
+      <button class="btn primary" id="resume" title="Open in a terminal (Ctrl+Enter)">Resume</button>
+    </div>
+    <div id="vbody"><div class="empty">Pick a session on the left.</div></div>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const PAGE = 100;
+const state = { q: '', src: 'mine', grp: '', days: '', from: '', to: '', rows: [], total: 0, sel: -1, open: null, session: null, marks: [], cur: -1 };
+let HOME = '', listReq = null, viewReq = null, loading = false;
+
+const short = (p) => (p && HOME && p.startsWith(HOME) ? '~' + p.slice(HOME.length) : p);
+const wide = () => matchMedia('(min-width: 761px)').matches;
+const tokens = () => state.q.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+const dayStart = (ms) => new Date(ms).setHours(0, 0, 0, 0);
+const time = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+
+function dayLabel(ms) {
+  const diff = Math.round((dayStart(Date.now()) - dayStart(ms)) / 864e5);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  const d = new Date(ms);
+  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', ...(d.getFullYear() !== new Date().getFullYear() && { year: 'numeric' }) });
+}
+
+function toast(text) {
+  $('#toast').textContent = text;
+  $('#toast').classList.add('on');
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => $('#toast').classList.remove('on'), 2200);
+}
+
+// ---------------------------------------------------------------- list
+
+function params(offset) {
+  const p = new URLSearchParams({ limit: PAGE, offset, src: state.src });
+  if (state.q) p.set('q', state.q);
+  if (state.grp) p.set('grp', state.grp);
+  if (state.days !== '') p.set('from', dayStart(Date.now()) - state.days * 864e5);
+  else {
+    if (state.from) p.set('from', new Date(state.from + 'T00:00').getTime());
+    if (state.to) p.set('to', new Date(state.to + 'T23:59:59').getTime());
+  }
+  return p;
+}
+
+async function load(more = false) {
+  if (more && (loading || state.rows.length >= state.total)) return;
+  listReq?.abort();
+  listReq = new AbortController();
+  loading = true;
+  try {
+    const r = await (await fetch('/api/sessions?' + params(more ? state.rows.length : 0), { signal: listReq.signal })).json();
+    state.total = r.total;
+    state.rows = more ? state.rows.concat(r.rows) : r.rows;
+    renderList(more);
+    if (!more) {
+      $('#list').scrollTop = 0;
+      const keep = state.rows.findIndex((x) => x.id === state.open);
+      select(keep >= 0 ? keep : 0, wide(), keep >= 0 && !state.q);
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') throw e;
+  } finally {
+    loading = false;
+  }
+}
+
+function rowHtml(r, i) {
+  const body = r.snippet
+    ? (r.hitRole === 'u' ? 'You: ' : r.hitRole === 'a' ? 'Claude: ' : '') + esc(r.snippet).replace(/\x01/g, '<mark>').replace(/\x02/g, '</mark>')
+    : esc(r.first_prompt);
+  return `<div class="row" data-i="${i}">
+    <div class="t"><span>${esc(r.title || 'Untitled')}</span>${r.hits ? `<span class="hits">${r.hits}</span>` : ''}</div>
+    <div class="s">${body}</div>
+    <div class="m"><span class="f">${esc(short(r.cwd))}</span>${r.branch ? `<span>· ${esc(r.branch)}</span>` : ''}<span class="r">${r.users} prompt${r.users === 1 ? '' : 's'} · ${time(r.ended)}</span></div>
+  </div>`;
+}
+
+function renderList() {
+  let html = '', day = null;
+  state.rows.forEach((r, i) => {
+    const d = dayStart(r.ended);
+    if (d !== day) html += `<div class="day">${dayLabel(r.ended)}</div>`;
+    day = d;
+    html += rowHtml(r, i);
+  });
+  $('#list').innerHTML = html || '<div class="empty">No sessions match.</div>';
+  if (state.rows.length < state.total) {
+    const s = document.createElement('div');
+    s.className = 'empty';
+    s.textContent = 'Loading more…';
+    $('#list').append(s);
+    more.observe(s);
+  }
+  $('#count').textContent = `${state.total.toLocaleString()} session${state.total === 1 ? '' : 's'}`;
+  $('#list').querySelector(`.row[data-i="${state.sel}"]`)?.classList.add('sel');
+}
+const more = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && load(true), { root: $('#list'), rootMargin: '400px' });
+
+function select(i, open, quiet) {
+  if (!state.rows.length) return (state.sel = -1);
+  state.sel = Math.max(0, Math.min(i, state.rows.length - 1));
+  $('#list').querySelector('.row.sel')?.classList.remove('sel');
+  const el = $('#list').querySelector(`.row[data-i="${state.sel}"]`);
+  el?.classList.add('sel');
+  el?.scrollIntoView({ block: 'nearest' });
+  if (open && !quiet) {
+    clearTimeout(select.t);
+    select.t = setTimeout(() => openSession(state.rows[state.sel]), 90);
+  }
+}
+
+// ---------------------------------------------------------------- transcript
+
+function span(p) {
+  return esc(p)
+    .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+    .replace(/^#{1,6} +(.+)$/, '<b class="h">$1</b>')
+    .replace(/\[([^\]\n]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+const isRow = (l) => /^\s*\|.*\|\s*$/.test(l ?? '');
+const cells = (l, tag) => `<tr>${l.trim().slice(1, -1).split('|').map((c) => `<${tag}>${span(c.trim())}</${tag}>`).join('')}</tr>`;
+function inline(p) {
+  const lines = p.split('\n'), out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (isRow(lines[i]) && /^[\s:|-]+$/.test(lines[i + 1] ?? '') && isRow(lines[i + 1])) {
+      let html = `<table>${cells(lines[i], 'th')}`;
+      for (i += 2; isRow(lines[i]); i++) html += cells(lines[i], 'td');
+      i--;
+      out.push(html + '</table>');
+    } else out.push(span(lines[i]));
+  }
+  return out.join('\n');
+}
+function md(src) {
+  return src.split('```').map((p, i) => {
+    if (i % 2 === 0) return inline(p.replace(/^\n+|\n+$/g, ''));
+    const nl = p.indexOf('\n');
+    return `<pre>${esc((nl >= 0 ? p.slice(nl + 1) : p).replace(/\n$/, ''))}</pre>`;
+  }).join('');
+}
+
+function markAll(root, toks) {
+  if (!toks.length) return;
+  const re = new RegExp('(?<![\\p{L}\\p{N}])(?:' + toks.join('|') + ')', 'giu');
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const n of nodes) {
+    const s = n.nodeValue;
+    let m, last = 0, frag = null;
+    re.lastIndex = 0;
+    while ((m = re.exec(s))) {
+      frag ??= document.createDocumentFragment();
+      const k = document.createElement('mark');
+      k.textContent = m[0];
+      frag.append(s.slice(last, m.index), k);
+      last = m.index + m[0].length;
+    }
+    if (frag) {
+      frag.append(s.slice(last));
+      n.replaceWith(frag);
+    }
+  }
+}
+
+async function openSession(row) {
+  if (!row) return;
+  state.open = row.id;
+  document.body.classList.add('open');
+  viewReq?.abort();
+  viewReq = new AbortController();
+  let r;
+  try {
+    r = await (await fetch('/api/session/' + row.id, { signal: viewReq.signal })).json();
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    throw e;
+  }
+  if (r.error) return void ($('#vbody').innerHTML = `<div class="empty">${esc(r.error)}</div>`);
+  const s = (state.session = r.session);
+  $('#vhead').hidden = false;
+  $('#vtitle').textContent = s.title || 'Untitled';
+  $('#vsub').textContent = [short(s.cwd), s.branch, `${dayLabel(s.started)} ${time(s.started)} → ${dayStart(s.started) === dayStart(s.ended) ? '' : dayLabel(s.ended) + ' '}${time(s.ended)}`, `${s.users} prompt${s.users === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  $('#vbody').innerHTML = r.items.map((it) => {
+    if (it.k === 't') return `<div class="msg t" data-u="${it.u}"><b>${esc(it.name)}</b> ${esc(it.text)}</div>`;
+    if (it.k === 'u') return `<div class="msg u" data-u="${it.u}"><span class="when">${dayLabel(it.ts)} ${time(it.ts)}</span>${esc(it.text)}</div>`;
+    if (it.k === 'n') return `<div class="msg n" data-u="${it.u}">${esc(it.text)}</div>`;
+    return `<div class="msg a" data-u="${it.u}">${md(it.text)}</div>`;
+  }).join('');
+  markAll($('#vbody'), tokens());
+  state.marks = [...$('#vbody').querySelectorAll('mark')];
+  $('#nav').style.display = state.marks.length ? 'flex' : 'none';
+  const hit = row.hit && $('#vbody').querySelector(`[data-u="${row.hit}"] mark`);
+  if (state.marks.length) jump(Math.max(0, state.marks.indexOf(hit)));
+  else $('#vbody').scrollTop = 0;
+}
+
+function jump(i) {
+  const n = state.marks.length;
+  if (!n) return;
+  state.marks[state.cur]?.classList.remove('cur');
+  state.cur = ((i % n) + n) % n;
+  state.marks[state.cur].classList.add('cur');
+  state.marks[state.cur].scrollIntoView({ block: 'center' });
+  $('#navn').textContent = `${state.cur + 1} / ${n}`;
+}
+
+async function resume() {
+  if (!state.session) return;
+  const r = await (await fetch('/api/resume/' + state.session.id, { method: 'POST' })).json();
+  toast(r.error || 'Opening in a terminal…');
+}
+
+// ---------------------------------------------------------------- filters
+
+async function loadFolders() {
+  const folders = await (await fetch('/api/folders?src=' + state.src)).json();
+  const all = folders.reduce((a, f) => a + f.n, 0);
+  $('#folders').innerHTML = `<div class="folder" data-g=""><span>All folders</span><span>${all}</span></div>` +
+    folders.map((f) => `<div class="folder" data-g="${esc(f.grp)}" title="${esc(short(f.grp))}"><span>&lrm;${esc(short(f.grp))}</span><span>${f.n}</span></div>`).join('');
+  $('#grpSel').innerHTML = `<option value="">All folders (${all})</option>` + folders.map((f) => `<option value="${esc(f.grp)}">${esc(short(f.grp))} (${f.n})</option>`).join('');
+  showGrp();
+}
+function showGrp() {
+  for (const el of $('#folders').children) el.classList.toggle('on', el.dataset.g === state.grp);
+  $('#grpSel').value = state.grp;
+}
+function setGrp(g) {
+  state.grp = g;
+  showGrp();
+  load();
+}
+
+$('#folders').onclick = (e) => { const f = e.target.closest('.folder'); if (f) setGrp(f.dataset.g); };
+$('#grpSel').onchange = (e) => setGrp(e.target.value);
+$('#src').onclick = (e) => {
+  if (!e.target.dataset.s) return;
+  state.src = e.target.dataset.s;
+  state.grp = '';
+  for (const b of $('#src').children) b.classList.toggle('on', b === e.target);
+  loadFolders();
+  load();
+};
+$('#range').onclick = (e) => {
+  if (e.target.dataset.d === undefined) return;
+  state.days = e.target.dataset.d;
+  state.from = state.to = $('#from').value = $('#to').value = '';
+  for (const b of $('#range').children) b.classList.toggle('on', b === e.target);
+  load();
+};
+for (const id of ['from', 'to']) {
+  $('#' + id).onchange = (e) => {
+    state[id] = e.target.value;
+    state.days = '';
+    for (const b of $('#range').children) b.classList.toggle('on', !state.from && !state.to && b.dataset.d === '');
+    load();
+  };
+}
+$('#q').oninput = (e) => {
+  clearTimeout(load.t);
+  load.t = setTimeout(() => { state.q = e.target.value.trim(); load(); }, 130);
+};
+$('#list').onclick = (e) => {
+  const row = e.target.closest('.row');
+  if (row) { select(+row.dataset.i); openSession(state.rows[state.sel]); }
+};
+$('#back').onclick = () => document.body.classList.remove('open');
+$('#resume').onclick = resume;
+$('#prev').onclick = () => jump(state.cur - 1);
+$('#next').onclick = () => jump(state.cur + 1);
+$('#copy').onclick = async () => {
+  const s = state.session;
+  await navigator.clipboard.writeText(`cd ${s.cwd.includes(' ') ? `"${s.cwd}"` : s.cwd} && claude --resume ${s.id}`);
+  toast('Resume command copied');
+};
+
+addEventListener('keydown', (e) => {
+  const typing = document.activeElement === $('#q');
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    select(state.sel + (e.key === 'ArrowDown' ? 1 : -1), wide());
+  } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) resume();
+  else if (e.key === 'Enter') openSession(state.rows[state.sel]);
+  else if (e.key === 'Escape') {
+    if (document.body.classList.contains('open') && !wide()) document.body.classList.remove('open');
+    else if ($('#q').value) { $('#q').value = state.q = ''; load(); }
+    $('#q').focus();
+  } else if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.key === 'n') jump(state.cur + 1);
+    else if (e.key === 'p') jump(state.cur - 1);
+    else if (e.key === '/' || e.key.length === 1) $('#q').focus();
+  }
+});
+
+// ---------------------------------------------------------------- boot
+
+async function poll() {
+  const s = await (await fetch('/api/status')).json();
+  HOME = s.home;
+  if (s.indexing) {
+    $('#progress').style.width = `${(100 * s.done) / s.total}%`;
+    $('#count').textContent = `Indexing ${s.done} / ${s.total}…`;
+    setTimeout(async () => { await poll(); }, 1000);
+    if (s.done % 5 === 0) loadFolders(), load();
+  } else if ($('#progress').style.width && $('#progress').style.width !== '0px') {
+    $('#progress').style.width = '0';
+    loadFolders();
+    load();
+  }
+}
+// Sessions keep changing while the window sits open; refresh when it gets focus again.
+addEventListener('focus', () => { loadFolders(); if (!state.q) load(); });
+poll().then(() => { loadFolders(); load(); });
+</script>
+</body>
+</html>

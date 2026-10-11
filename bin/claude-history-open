@@ -1,0 +1,9 @@
+#!/bin/bash
+# Focus the Claude History window, or open it if there is none (SUPER+A).
+systemctl --user is-active -q claude-history || systemctl --user start claude-history
+addr=$(hyprctl clients -j | jq -r '.[] | select((.class | startswith("chrome-127.0.0.1")) and .title == "Claude History") | .address' | head -n1)
+if [[ -n $addr ]]; then
+  hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null
+else
+  exec omarchy-launch-webapp "http://127.0.0.1:4470/"
+fi
