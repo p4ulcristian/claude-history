@@ -1,10 +1,11 @@
 #!/bin/bash
 # Focus the Claude History window, or open it if there is none (SUPER+A).
-# Served as localhost, not 127.0.0.1: the Hyprland kiosk rule parks every chrome-127.0.0.1 app window on special:iris.
+# Its own hostname gives the window its own class (chrome-claude-history.localhost__-Default) for the float/center
+# rule in ~/.config/hypr/hyprland.lua, and keeps it clear of the kiosk rule that parks chrome-127.0.0.1 windows.
 systemctl --user is-active -q claude-history || systemctl --user start claude-history
-addr=$(hyprctl clients -j | jq -r '.[] | select((.class | startswith("chrome-localhost")) and .title == "Claude History") | .address' | head -n1)
+addr=$(hyprctl clients -j | jq -r '.[] | select((.class | startswith("chrome-claude-history.localhost")) and .title == "Claude History") | .address' | head -n1)
 if [[ -n $addr ]]; then
   hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null
 else
-  exec omarchy-launch-webapp "http://localhost:4470/"
+  exec omarchy-launch-webapp "http://claude-history.localhost:4470/"
 fi

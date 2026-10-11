@@ -9,7 +9,7 @@ const HOME = homedir();
 const PROJECTS = join(HOME, ".claude/projects");
 const DATA = join(process.env.XDG_DATA_HOME || join(HOME, ".local/share"), "claude-history");
 const PORT = Number(process.env.PORT || 4470);
-const HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
+const HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`, `claude-history.localhost:${PORT}`]);
 // Bump to rebuild the index after a change to the schema or to what gets indexed.
 const SCHEMA = "3";
 const MAX_TEXT = 100_000;
