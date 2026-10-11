@@ -1,7 +1,7 @@
 #!/bin/bash
 # SUPER+A: open the Claude History widget, focus it, or close it when it already has focus.
-# Its own hostname gives the window its own class (chrome-claude-history.localhost__-Default) for the float/center
-# rule in ~/.config/hypr/hyprland.lua, and keeps it clear of the kiosk rule that parks chrome-127.0.0.1 windows.
+# Its own hostname gives the window its own class (chrome-claude-history.localhost__-Default), so a Hyprland
+# window rule can float, centre and size it without touching other local web apps.
 systemctl --user is-active -q claude-history || systemctl --user start claude-history
 addr=$(hyprctl clients -j | jq -r '.[] | select(.class | startswith("chrome-claude-history.localhost")) | .address' | head -n1)
 if [[ -z $addr ]]; then

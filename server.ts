@@ -10,6 +10,8 @@ const PROJECTS = join(HOME, ".claude/projects");
 const DATA = join(process.env.XDG_DATA_HOME || join(HOME, ".local/share"), "claude-history");
 const PORT = Number(process.env.PORT || 4470);
 const HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`, `claude-history.localhost:${PORT}`]);
+// Extra flags for the resumed `claude`, e.g. CLAUDE_HISTORY_RESUME_ARGS="--dangerously-skip-permissions".
+const RESUME_ARGS = (process.env.CLAUDE_HISTORY_RESUME_ARGS ?? "").split(/\s+/).filter(Boolean);
 // Bump to rebuild the index after a change to the schema or to what gets indexed.
 const SCHEMA = "3";
 const MAX_TEXT = 100_000;
@@ -102,7 +104,7 @@ async function parseSession(path: string) {
       anyCwd ||= d.cwd;
       if (encode(d.cwd) === dir) m.cwd = d.cwd;
     }
-    // Sessions started through the SDK (Iris, Otto, CI agents) rather than typed into a terminal.
+    // Sessions started through the SDK (scripts, bots, CI agents) rather than typed into a terminal.
     if (typeof d.entrypoint === "string" && d.entrypoint.startsWith("sdk")) m.auto = 1;
     const t = d.type;
     if (t === "ai-title") ai = d.aiTitle || ai;
@@ -274,8 +276,7 @@ function resume(id: string) {
   if (!existsSync(s.cwd)) return { error: `Folder no longer exists: ${s.cwd}` };
   const claude = Bun.which("claude");
   if (!claude) return { error: "claude not found on PATH" };
-  // Same flags as the SUPER+RETURN binding in ~/.config/hypr/bindings.lua.
-  Bun.spawn(["setsid", "-f", "uwsm-app", "--", "xdg-terminal-exec", `--dir=${s.cwd}`, claude, "--dangerously-skip-permissions", "--resume", id], {
+  Bun.spawn(["setsid", "-f", "uwsm-app", "--", "xdg-terminal-exec", `--dir=${s.cwd}`, claude, ...RESUME_ARGS, "--resume", id], {
     stdio: ["ignore", "ignore", "ignore"],
   });
   return { ok: true };
